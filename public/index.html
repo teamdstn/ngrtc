@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset=utf-8>
+    <meta name=Description content="teamdstn, powered by vLine and WebRTC">
+    <meta content="IE=edge,chrome=1" http-equiv=X-UA-Compatible>
+    <meta name=google value=notranslate>
+    <meta name=viewport content="initial-scale = 1.0, user-scalable = no, maximum-scale = 1.0">
+    <meta name=apple-mobile-web-app-capable content=yes />
+    <title>teamdstn</title>
+    <link rel="shortcut icon" href="images/favicon16.png" type="image/png" />
+
+    <!-- Server Create -->
+    <style>
+      html {
+        min-height:100%;
+        overflow:hidden
+      }
+      .vl-login-logo {
+        background:url("") no-repeat
+      }
+      /*
+      .vl-login-logo {
+        background:url("images/logo.svg") no-repeat
+      }
+      */
+      .vl-background {
+        background:url("images/bg/mosaic_blk.png") repeat
+      }
+      .chromeFrameOverlayCloseBar {
+        display:none
+      }
+    </style>
+    <link href="css/vline.css" media=screen rel=stylesheet />
+
+    <script>
+      /* Vline Configuration */
+      var vlineAppConf = {
+        appId: "teamdstn",
+        authId: "teamdstn",
+        title: "teamdstn",
+        bgImg: "images/bg/mosaic_blk.png",
+        logoImg: "",
+        //logoImg: "images/logo.svg",
+        desc: "teamdstn",
+        hideVlineBrand: String("false").toLowerCase() === "true",
+        favicon: "images/favicon16.png",
+        loginBtnTxt: "Login",
+        showHome: String("false").toLowerCase() === "true",
+        showFeedbackBtn: String("false").toLowerCase() === "true",
+        showLogoutBtn: String("true").toLowerCase() === "true"
+      };
+    </script>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
+    <script src="js/cdn/jquery.transit.min.js"></script>
+    <script src="js/cdn/vline.js"></script>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.6/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.6/angular-cookies.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.6/angular-resource.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.6/angular-sanitize.min.js"></script>
+    
+    <script src="js/directives.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/controllers.js"></script>
+    <script src="js/services.js"></script>
+    <script src="js/providers.js"></script>
+    <script src="js/filters.js"></script>
+    <script>
+      if (vline.Browser.isIE()) { 
+        throw "Unsupported browser";
+      }
+
+      vline = vline || {};
+      vline.ui = vline.ui || {};
+      vline.ui.app = app;
+      vline.ui.AppController = AppCtrl;
+
+      vline.ui.app.requires.push("vline.ui.ManagedProvider");
+    </script>
+  </head>
+  
+  <body class="vl-background no-touch">
+
+    <div class=vl-base ng-cloak ng-app="vline.ui.app" ng-controller="vline.ui.AppController">
+      <div class=vl-login vl-show="!showApp()">
+        <div class=vl-login-spacer-top></div>
+
+        <div id=vl-login-logo class=vl-login-logo></div>
+        <div class=vl-login-content>
+          <div id=vl-login-spinner ng-show="showSpinner()"></div>
+
+          <div ng-show="showNotSupported()" href="https://google.com/chrome" target=_blank class="vl-button-black vl-button vl-button-large vl-login-button">
+            <span class=vl-login-button-label>Download Chrome</span>
+          </div>
+
+          <div class=vl-login-not-supported ng-show="showNotSupported()">Your browser is not yet supported. Please download Google Chrome.</div>
+          
+          <div ng-show="showUpgrade()" style="display: none" href="javascript:void(0)" ng-click="upgradeChrome()" class="vl-button-black vl-button vl-button-large vl-login-button">
+            <span class=vl-login-button-label>Update Chrome</span>
+          </div>
+
+          <div class=vl-login-not-supported style="display: none" ng-show="showUpgrade()">Your version of Google Chrome is unsupported. Please update.</div>
+
+          <a href="javascript:void(0)" class="vl-button-black vl-button vl-button-large vl-login-button" ng-click="login()" ng-show="!showNotSupported() && !showUpgrade() && showLogin()" style="display: none">
+            <span class=vl-login-button-label>Login</span> 
+          </a>
+
+        </div>
+        <!-- END: vl-login-content -->
+        <div class=vl-login-spacer-bottom></div>
+      </div>
+      <!-- END: vl-login -->
+
+      <!-- vl-app -->
+      <div class=vl-app style="display: none" ng-class="{'vl-active-video-selected':selectedUserHasVideo(), 'vl-active-video-unselected':unselectedUserHasVideo()}" vl-show="showApp()" vl-fx=fade ng-cloak>
+        
+        <div style="display: none">Version: beef552</div>
+
+        <!-- vl-app-main -->
+        <div class=vl-app-main>
+
+          <!-- vl-app-sidebar -->
+          <div class=vl-app-sidebar>
+            <div>
+              <div class="vl-sidebar-header vl-{{owner.getPresenceState()}}">
+                <div class=vl-flex-shim vl-show="!!owner">
+                  <div class="vl-avatar vl-medium">
+                    <img ng-src="{{owner.getThumbnailUrl(true)}}" alt="" />
+                  </div>
+                  <div class=vl-self-name>{{owner.getDisplayName(true)}}</div>
+
+                  <div class=vl-self-status-selector ng-show="owner.id" ng-click="togglePresenceMenu($event)">
+                    <a href="javascript: void(0)" class="vl-self-status-current status-{{owner.getPresenceState()}}"><span></span></a>
+                    <ul ng-show=presenceMenuOn>
+                      <li><a id=vl-online class=vl-status-online href="javascript: void(0)" ng-click="goOnline()">Online</a></li>
+                      <li><a class=vl-status-away href="javascript: void(0)">Away</a></li>
+                      <li><a class=vl-status-busy href="javascript: void(0)">Busy</a></li>
+                      <li><a id=vl-offline class=vl-status-offline href="javascript: void(0)" ng-click="goOffline()">Offline</a></li>
+                    </ul>
+                  </div>
+
+                </div>
+              </div>
+
+              <div class="vl-sidebar-group-list vl-scroll">
+                <div class="sidebar-group sidebar-group-nav">
+                  <ul class=vl-sidebar-group-content>
+                    <li class=vl-sidebar-item ng-click="select('/')" ng-class="{'vl-selected' : isLocation('/')}" ng-show="showHome()">
+                      <span class="vl-sidebar-item-name vl-sidebar-search-name icon-home">Home</span>
+                    </li>
+                    <li class=vl-sidebar-item ng-click="select('!search')" ng-class="{'vl-selected' : isLocation('/!search')}" ng-show="supportsSearch()">
+                      <span class="vl-sidebar-item-name vl-sidebar-search-name icon-search">People Search</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div id=vl-sidebar-calls class=vl-sidebar-group vl-show="$vline.hasMediaSessions()" vl-fx=slide>
+                  <div class=vl-sidebar-group-header>CALLS</div>
+                  <ul class=vl-sidebar-group-content>
+                    <li ng-repeat="user in getCalls() | orderBy:predicate" ng-click="select(user)" class="vl-sidebar-item vl-{{user.getPresenceState()}}" ng-class="{'vl-selected' : isSelected(user)}">
+                      <div class=vl-sidebar-item-content>
+                        <div class="vl-avatar vl-small"><img ng-src="{{user.getThumbnailUrl()}}" alt="" /></div>
+                        <span class=vl-sidebar-item-name>{{user.getDisplayName()}}</span>
+                        <div class=vl-sidebar-item-unread-counter vl-show="!!user.getUnreadCount()">{{user.getUnreadCount()}}</div>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+
+                <div id=vl-sidebar-recent class=vl-sidebar-group vl-show="!!recentContacts.length" vl-fx=slide>
+                  <div class=vl-sidebar-group-header>RECENT</div>
+                  <ul class=vl-sidebar-group-content>
+                    <li ng-repeat="user in recentContacts | orderBy:predicate" ng-click="select(user)" class="vl-sidebar-item vl-{{user.getPresenceState()}}" ng-class="{'vl-selected' : isSelected(user)}">
+                      <div class=vl-sidebar-presence-indicator></div>
+                      <div class=vl-sidebar-item-content>
+                        <div class="vl-avatar vl-small"><img ng-src="{{user.getThumbnailUrl()}}" alt="" /></div>
+                        <span class=vl-sidebar-item-name>{{user.getDisplayName()}}</span>
+                        <div class=vl-sidebar-item-unread-counter vl-show="!!user.getUnreadCount()">{{user.getUnreadCount()}}</div>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+
+                <div id=vl-sidebar-fav class=vl-sidebar-group vl-show="!!contacts.length" vl-fx=slide>
+                  <div class=vl-sidebar-group-header>CONTACTS</div>
+                  <ul class=vl-sidebar-group-content>
+                    <li ng-repeat="user in contacts | orderBy:predicate" ng-click="select(user)" class="vl-sidebar-item vl-{{user.getPresenceState()}}" ng-class="{'vl-selected' : isSelected(user)}">
+                      <div class=vl-sidebar-presence-indicator></div>
+                      <div class=vl-sidebar-item-content>
+                        <div class="vl-avatar vl-small"><img ng-src="{{user.getThumbnailUrl()}}" alt="" /></div>
+                        <span class=vl-sidebar-item-name>{{user.getDisplayName()}}</span>
+                        <div class=vl-sidebar-item-unread-counter ng-show="!!user.getUnreadCount()">{{user.getUnreadCount()}}</div>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <div class=vl-sidebar-footer>
+                <a ng-show="!vlineAppConf.hideVlineBrand" href="https://vline.com" alt="Powered by vline" target=_blank>
+                  <div class=vl-powered-sidebar></div>
+                </a>
+              </div>
+
+            </div>
+          </div>
+          <!-- vl-app-center -->
+          <div class=vl-app-center ng-class="{'vl-show-sidebar': showSidebar()}">
+            <div class=vl-app-header>
+              <div class=vl-app-header-left>
+                <button id=vl-sidebar-toggle-btn class="vl-button-black vl-button vl-square icon-th-list" ng-class="{'vl-pressed': showSidebar()}" ng-click="toggleSidebar()"></button>
+              </div><span id=vl-app-header-label>{{getViewLabel()}}</span>
+
+              <div class=vl-app-header-right ng-show="!$vline.hasMediaSessions()">
+                <button id=vl-feedback-btn class="vl-button-black vl-button" ng-click="feedback()" ng-show="showFeedbackButton()">feedback</button>
+                <button id=vl-logout-btn class="vl-button-black vl-button vl-square icon-logout" ng-click="logout()" ng-show="showLogoutButton()"></button>
+              </div>
+            </div>
+            <div class=vl-app-view ng-view></div>
+            <div class=vl-video-panel-wrapper ng-class="{'vl-video-panel-wrapper-hidden': !selectedUserHasVisibleVideoPanel(), 'vl-video-panel-wrapper-visible': selectedUserHasVisibleVideoPanel()}">
+              <vl-video-panel id=vline-video-panel video-count=numActiveVideos channel="selectedUser.channel"></vl-video-panel>
+            </div>
+          </div>
+          <!-- END: vl-app-center -->
+        </div>
+        <!-- END: vl-app-main -->
+
+        <div class=vl-app-footer></div>
+      </div>
+
+    </div>
+    <script src="js/script.min.js"></script>
+  </body>
+</html>

@@ -1,0 +1,103 @@
+extends layout
+
+block content
+    .vl-base(ng-cloak='ng-cloak', ng-app='vline.ui.app', ng-controller='vline.ui.AppController')
+      .vl-login(vl-show='!showApp()')
+        .vl-login-spacer-top
+        #vl-login-logo.vl-login-logo
+        .vl-login-content
+          #vl-login-spinner(ng-show='showSpinner()')
+          .vl-button-black.vl-button.vl-button-large.vl-login-button(ng-show='showNotSupported()', href='https://google.com/chrome', target='_blank')
+            span.vl-login-button-label Download Chrome
+          .vl-login-not-supported(ng-show='showNotSupported()') Your browser is not yet supported. Please download Google Chrome.
+          .vl-button-black.vl-button.vl-button-large.vl-login-button(ng-show='showUpgrade()', style='display: none;', href='javascript:void(0)', ng-click='upgradeChrome()')
+            span.vl-login-button-label Update Chrome
+          .vl-login-not-supported(style='display: none;', ng-show='showUpgrade()') Your version of Google Chrome is unsupported. Please update.
+          a.vl-button-black.vl-button.vl-button-large.vl-login-button(href='javascript:void(0)', ng-click='login()', ng-show='!showNotSupported() && !showUpgrade() && showLogin()', style='display: none;')
+            span.vl-login-button-label Login
+        .vl-login-spacer-bottom
+      .vl-app(style='display: none;', ng-class='{\'vl-active-video-selected\':selectedUserHasVideo(), \'vl-active-video-unselected\':unselectedUserHasVideo()}', vl-show='showApp()', vl-fx='fade', ng-cloak='ng-cloak')
+        div(style='display: none;') Version: beef552
+        .vl-app-main
+          .vl-app-sidebar
+            div
+              .vl-sidebar-header.vl-{{owner.getPresenceState()}}
+                .vl-flex-shim(vl-show='!!owner')
+                  .vl-avatar.vl-medium
+                    img(ng-src='{{owner.getThumbnailUrl(true)}}', alt='')
+                  .vl-self-name {{owner.getDisplayName(true)}}
+                  .vl-self-status-selector(ng-show='owner.id', ng-click='togglePresenceMenu($event)')
+                    a.vl-self-status-current.status-{{owner.getPresenceState()}}(href='javascript: void(0)')
+                      span
+                    ul(ng-show='presenceMenuOn')
+                      li
+                        a#vl-online.vl-status-online(href='javascript: void(0)', ng-click='goOnline()') Online
+                      li
+                        a.vl-status-away(href='javascript: void(0)') Away
+                      li
+                        a.vl-status-busy(href='javascript: void(0)') Busy
+                      li
+                        a#vl-offline.vl-status-offline(href='javascript: void(0)', ng-click='goOffline()') Offline
+              .vl-sidebar-group-list.vl-scroll
+                .sidebar-group.sidebar-group-nav
+                  ul.vl-sidebar-group-content
+                    li.vl-sidebar-item(ng-click='select(\'/\')', ng-class='{\'vl-selected\' : isLocation(\'/\')}', ng-show='showHome()')
+                      span.vl-sidebar-item-name.vl-sidebar-search-name.icon-home Home
+                    li.vl-sidebar-item(ng-click='select(\'!search\')', ng-class='{\'vl-selected\' : isLocation(\'/!search\')}', ng-show='supportsSearch()')
+                      span.vl-sidebar-item-name.vl-sidebar-search-name.icon-search People Search
+                #vl-sidebar-calls.vl-sidebar-group(vl-show='$vline.hasMediaSessions()', vl-fx='slide')
+                  .vl-sidebar-group-header CALLS
+                  ul.vl-sidebar-group-content
+                    li.vl-sidebar-item.vl-{{user.getPresenceState()}}(ng-repeat='user in getCalls() | orderBy:predicate', ng-click='select(user)', ng-class='{\'vl-selected\' : isSelected(user)}')
+                      .vl-sidebar-item-content
+                        .vl-avatar.vl-small
+                          img(ng-src='{{user.getThumbnailUrl()}}', alt='')
+                        span.vl-sidebar-item-name {{user.getDisplayName()}}
+                        .vl-sidebar-item-unread-counter(vl-show='!!user.getUnreadCount()') {{user.getUnreadCount()}}
+                #vl-sidebar-recent.vl-sidebar-group(vl-show='!!recentContacts.length', vl-fx='slide')
+                  .vl-sidebar-group-header RECENT
+                  ul.vl-sidebar-group-content
+                    li.vl-sidebar-item.vl-{{user.getPresenceState()}}(ng-repeat='user in recentContacts | orderBy:predicate', ng-click='select(user)', ng-class='{\'vl-selected\' : isSelected(user)}')
+                      .vl-sidebar-presence-indicator
+                      .vl-sidebar-item-content
+                        .vl-avatar.vl-small
+                          img(ng-src='{{user.getThumbnailUrl()}}', alt='')
+                        span.vl-sidebar-item-name {{user.getDisplayName()}}
+                        .vl-sidebar-item-unread-counter(vl-show='!!user.getUnreadCount()') {{user.getUnreadCount()}}
+                #vl-sidebar-fav.vl-sidebar-group(vl-show='!!contacts.length', vl-fx='slide')
+                  .vl-sidebar-group-header CONTACTS
+                  ul.vl-sidebar-group-content
+                    li.vl-sidebar-item.vl-{{user.getPresenceState()}}(ng-repeat='user in contacts | orderBy:predicate', ng-click='select(user)', ng-class='{\'vl-selected\' : isSelected(user)}')
+                      .vl-sidebar-presence-indicator
+                      .vl-sidebar-item-content
+                        .vl-avatar.vl-small
+                          img(ng-src='{{user.getThumbnailUrl()}}', alt='')
+                        span.vl-sidebar-item-name {{user.getDisplayName()}}
+                        .vl-sidebar-item-unread-counter(ng-show='!!user.getUnreadCount()') {{user.getUnreadCount()}}
+              .vl-sidebar-footer
+                a(ng-show='!vlineAppConf.hideVlineBrand', href='https://vline.com', alt='Powered by vline', target='_blank')
+                  .vl-powered-sidebar
+          .vl-app-center(ng-class='{\'vl-show-sidebar\': showSidebar()}')
+            .vl-app-header
+              .vl-app-header-left
+                button#vl-sidebar-toggle-btn.vl-button-black.vl-button.vl-square.icon-th-list(ng-class='{\'vl-pressed\': showSidebar()}', ng-click='toggleSidebar()')
+              span#vl-app-header-label {{getViewLabel()}}
+              .vl-app-header-right(ng-show='!$vline.hasMediaSessions()')
+                button#vl-feedback-btn.vl-button-black.vl-button(ng-click='feedback()', ng-show='showFeedbackButton()') feedback
+                button#vl-logout-btn.vl-button-black.vl-button.vl-square.icon-logout(ng-click='logout()', ng-show='showLogoutButton()')
+            .vl-app-view(ng-view='ng-view')
+            .vl-video-panel-wrapper(ng-class='{\'vl-video-panel-wrapper-hidden\': !selectedUserHasVisibleVideoPanel(), \'vl-video-panel-wrapper-visible\': selectedUserHasVisibleVideoPanel()}')
+              vl-video-panel#vline-video-panel(video-count='numActiveVideos', channel='selectedUser.channel')
+        .vl-app-footer
+      a.vl-powered(ng-show='!vlineAppConf.hideVlineBrand', href='/', target='_blank')
+        .vl-powered-img(alt='powered by vline')
+    script
+      if (vline.Browser.isIE()) {
+      throw "Unsupported browser";
+      }
+      vline = vline || {};
+      vline.ui = vline.ui || {};
+      vline.ui.app = app;
+      vline.ui.AppController = AppCtrl;
+      vline.ui.app.requires.push("vline.ui.ManagedProvider");
+    script(src='js/script.js')

@@ -1,0 +1,41 @@
+<div class="vl-content-body vl-home-body vl-scroll">
+  <div class=vl-home-message ng-show="showHome()">
+    <h2>Welcome to GitTogether</h2>
+    <p>GitTogether is powered by <a href="http://webrtc.org">WebRTC</a> and the <a href="https://vline.com">vLine real-time cloud</a>.</p>
+
+    <h3>Getting Started</h3>
+
+    <ul class=vl-home-list>
+      <li>Your contacts are the people you you follow on GitHub and the members of your GitHub organizations.</li>
+      <li>To find other GitHub users, click <a ng-click="select('!search')">People Search</a>.</li>
+      <li>Don't see anyone you know online? Open another browser window and call yourself (be sure to turn down the volume).</li>
+      <li>Using an external mic and not getting any audio? Star <a href="https://code.google.com/p/chromium/issues/detail?id=164058">this issue</a> and restart Chrome.</li>
+    </ul>
+
+    <h3>Your Personal Link</h3>
+
+    <div>
+      Share <a href="{{shareLink()}}" target=_blank>{{shareLink()}}</a> with friends so that they can call you! 
+      <span class=vl-share-buttons>
+        <span class="vl-button-black vl-share-button icon-twitter" ng-click="tweet()">Tweet</span>
+        <span class="vl-button-black vl-share-button icon-gplus" ng-click="share()">Share</span>
+      </span>
+    </div>
+
+    <h3>Talk to Us!</h3>
+    <p>Want to chat about WebRTC or just looking for someone to try a test call with? Ping one of the vLine team members:</p>
+
+    <div class=vl-home-developers>
+      <span ng-repeat="user in developers" ng-click="select(user)" class=vl-developer>
+        <span class="vl-sidebar-item vl-{{user.getPresenceState()}}">
+          <div class=vl-sidebar-presence-indicator></div>
+          <div class=vl-sidebar-item-content>
+            <div class="vl-avatar vl-small"><img ng-src="{{user.getThumbnailUrl()}}" alt=""/></div>
+            <span class=vl-sidebar-item-name> {{user.getDisplayName()}} </span>
+            <div class=vl-sidebar-item-unread-counter ng-show="!!user.getUnreadCount()"> {{user.getUnreadCount()}} </div>
+          </div>
+        </span>
+      </span>
+    </div>
+  </div>
+</div>
