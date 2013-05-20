@@ -31,23 +31,10 @@ html
       display:none
       }
     link(href='css/vline.css', media='screen', rel='stylesheet')
+
     script
-      /* =ServerSide= Vline Configuration */
-      var vlineAppConf = {
-      appId: "teamdstn",
-      authId: "teamdstn",
-      title: "teamdstn",
-      bgImg: "images/bg/mosaic_blk.png",
-      logoImg: "",
-      //logoImg: "images/logo.svg",
-      desc: "teamdstn",
-      hideVlineBrand: String("false").toLowerCase() === "true",
-      favicon: "images/favicon16.png",
-      loginBtnTxt: "Login",
-      showHome: String("false").toLowerCase() === "true",
-      showFeedbackBtn: String("false").toLowerCase() === "true",
-      showLogoutBtn: String("true").toLowerCase() === "true"
-      };
+      var vlineAppConf = !{JSON.stringify(locals.appConf)}
+
     script(src='https://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js')
     script(src='js/cdn/jquery.transit.min.js')
     script(src='js/cdn/vline.js')

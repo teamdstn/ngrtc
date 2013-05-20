@@ -1,0 +1,39 @@
+#vl-content(ng-cloak='ng-cloak')
+    .vl-people-search-header
+        form.vl-people-search-ctrl(ng-submit='search()')
+          input#vl-primary-text.vl-people-textarea(ng-model='searchValue', ng-change='onChange()', autofocus='autofocus')
+          input.vl-textarea-submit.vl-button(type='submit', value='Search')
+      .vl-content-body.vl-people-search-body.vl-scroll
+        .vl-people-search-status(vl-show='searchResults')
+          span(vl-show='!!filteredContacts.length || !!searchContacts.length') {{filteredContacts.length + searchContacts.length}} Matches
+          span(vl-show='!filteredContacts.length && !searchContacts.length') No matches found
+        ul
+          li.vl-contact-item(ng-repeat='user in filteredContacts', ng-click='select(user)')
+            a(href='javascript: void(0)')
+              .vl-avatar.vl-large(ng-click='select(user)')
+                img(ng-src='{{user.getThumbnailUrl()}}', alt='')
+            .vl-contact-group-content
+              .vl-contact
+                .vl-contact-content
+                  .vl-contact-name
+                    a(href='javascript: void(0)', ng-click='select(user)') {{user.getDisplayName()}}
+                    | ({{user.getUserName()}})
+                  div {{user.getLocation()}}
+                  div Status: {{user.getPresenceState()}}
+                div
+                  a.vl-button(href='{{user.getProfileUrl()}}', target='_blank', ng-click='$event.stopPropagation()') GitHub Profile
+          li.vl-contact-item(ng-repeat='user in searchContacts', ng-click='select(user)')
+            a(href='javascript: void(0)')
+              .vl-avatar.vl-large(ng-click='select(user)')
+                img(ng-src='{{user.getThumbnailUrl()}}', alt='')
+            .vl-contact-group-content
+              .vl-contact
+                .vl-contact-content
+                  .vl-contact-name
+                    a(href='javascript: void(0)', ng-click='select(user)') {{user.getDisplayName()}}
+                    | ({{user.getUserName()}})
+                  div {{user.getLocation()}}
+                  div Status: {{user.getPresenceState()}}
+                div
+                  a.vl-button(href='{{user.getProfileUrl()}}', target='_blank', ng-click='$event.stopPropagation()') GitHub Profile
+        #vl-people-search-spinner(ng-show='showSearchSponner()')

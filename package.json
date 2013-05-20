@@ -5,6 +5,23 @@
   "scripts": {
     "start": "node app.js"
   },
+  "devDependencies": {
+    "ejs": "*",
+    "mocha": "*",
+    "jade": "*",
+    "stylus": "*",
+    "should": "*"
+  },
+  "keywords": [
+    "express",
+    "vline",
+    "angularjs",
+    "webrtc"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/teamdstn/ngrtc"
+  },
   "dependencies": {
     "express": "*",
     "cf-autoconfig": "*",
@@ -12,5 +29,6 @@
   },
   "engines": {
     "node": "0.8.x"
-  }
+  },
+  "readmeFilename": "Readme.md"
 }

@@ -1,0 +1,43 @@
+.vl-content-body.vl-home-body.vl-scroll
+    .vl-home-message(ng-show='showHome()')
+        h2 Welcome to GitTogether
+        p
+          | GitTogether is powered by
+          a(href='http://webrtc.org') WebRTC
+          | and the
+          a(href='https://vline.com') vLine real-time cloud
+          | .
+        h3 Getting Started
+        ul.vl-home-list
+          li
+            | Your contacts are the people you you follow on GitHub and the members of your GitHub organizations.
+          li
+            | To find other GitHub users, click
+            a(ng-click='select(\'!search\')') People Search
+            | .
+          li
+            | Don't see anyone you know online? Open another browser window and call yourself (be sure to turn down the volume).
+          li
+            | Using an external mic and not getting any audio? Star
+            a(href='https://code.google.com/p/chromium/issues/detail?id=164058') this issue
+            | and restart Chrome.
+        h3 Your Personal Link
+        div
+          | Share
+          a(href='{{shareLink()}}', target='_blank') {{shareLink()}}
+          | with friends so that they can call you!
+          span.vl-share-buttons
+            span.vl-button-black.vl-share-button.icon-twitter(ng-click='tweet()') Tweet
+            span.vl-button-black.vl-share-button.icon-gplus(ng-click='share()') Share
+        h3 Talk to Us!
+        p
+          | Want to chat about WebRTC or just looking for someone to try a test call with? Ping one of the vLine team members:
+        .vl-home-developers
+          span.vl-developer(ng-repeat='user in developers', ng-click='select(user)')
+            span.vl-sidebar-item.vl-{{user.getPresenceState()}}
+              .vl-sidebar-presence-indicator
+              .vl-sidebar-item-content
+                .vl-avatar.vl-small
+                  img(ng-src='{{user.getThumbnailUrl()}}', alt='')
+                span.vl-sidebar-item-name  {{user.getDisplayName()}}
+                .vl-sidebar-item-unread-counter(ng-show='!!user.getUnreadCount()') {{user.getUnreadCount()}}

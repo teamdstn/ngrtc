@@ -39,6 +39,7 @@ if ('development' == app.get('env')) {
 
 // Routes
 app.get('/', routes.index);
+app.get('/partials/:name', routes.partial);
 app.get('*', routes.index);
 
 server.listen(3000, function(){

@@ -1,0 +1,41 @@
+#vl-content(ng-cloak='ng-cloak')
+    #vl-content-header-shadow(ng-class='{\'vl-content-header-hidden\':selectedUserHasVisibleVideoPanel()}')
+      #vl-content-header(ng-class='{\'vl-content-header-hidden\':selectedUserHasVisibleVideoPanel()}')
+        .vl-flex-shim
+          .vl-avatar.vl-medium
+            img(ng-src='{{selectedUser.getThumbnailUrl()}}', alt='')
+          .vl-tile-content
+            span.vl-content-heading {{selectedUser.getDisplayName()}}
+            a.vl-add-fav(href='javascript: void(0)')
+          .vl-call-buttons(vl-show='showCallButtons()')
+            a.vl-button.vl-left.vl-green.icon-videocam(ng-click='startVideoCall()') Video Call
+            a.vl-button.vl-right.vl-green.icon-down-open(vl-menu-toggle='#vl-start-call-menu')
+            ul#vl-start-call-menu.vl-menu
+              li
+                a.vl-menu-item.icon-videocam(href='javascript: void(0)', ng-click='startVideoCall()') Video Call
+              li
+                a.vl-menu-item.icon-videocam(href='javascript: void(0)', vl-show='supportsHd()', ng-click='startHdVideoCall()') Video Call (HD)
+              li
+                a.vl-menu-item.icon-phone(href='javascript: void(0)', ng-click='startAudioCall()') Voice Call
+          .vl-call-buttons
+            a.vl-button.icon-videocam(vl-show='showDownloadButton()', href='https://google.com/chrome', target='_blank') Download Chrome to Make Calls
+          .vl-call-buttons(vl-show='selectedUserHasActiveMediaSession()')
+            a.vl-button.icon-mic(vl-show='!isMuted()', ng-click='muteCall()') Mute
+            a.vl-button.vl-red.icon-mic(vl-show='isMuted()', ng-click='unmuteCall()') Unmute
+            a.vl-button.icon-resize-full(ng-click='toggleFullscreen()') Fullscreen
+            a.vl-button.vl-red.icon-endcall(href='javascript: void(0)', ng-click='endCall()') End Call
+      #vl-content-body-shadow.vl-chat-body(ng-cloak='ng-cloak')
+      .vl-content-body.vl-chat-body.vl-scroll
+        ul
+          li.vl-content-item(ng-repeat='msg in getMessagesFromUser(selectedUser)', ng-class='{self:isFromSelf(msg), \'message-in\':!isFromSelf(msg)}')
+            .vl-avatar.vl-medium
+              img(ng-src='{{msg.getSender().getThumbnailUrl()}}', alt='')
+            .vl-event-group-content
+              p.vl-event-src-name {{msg.getSender().getDisplayName()}}
+              .vl-event
+                p.vl-event-content(ng-bind-html-unsafe='msg.getBody(true)')
+                .vl-event-time {{msg.getCreationTime() | dateFilter}}
+        .vl-content-typing-wrapper
+          .vl-content-typing-item(ng-class='message-in', vl-show='isTyping()')
+            div {{selectedUser.getDisplayName()}} is typing...
+      .vl-content-footer
