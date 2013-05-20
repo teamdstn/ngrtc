@@ -22,9 +22,9 @@ var app = angular.module("vline.ui.app", ["vline.ui.DirectoryService", "vline.ui
 
   $routeProvider
     //When(s)
-    .when(_path, { templateUrl:"partials/home", controller:HomeCtrl })
-    .when(_path + ":userName", { templateUrl:"partials/chat", controller:ChatCtrl })
-    .when(_path + "!search?:query", { templateUrl:"partials/people", controller:PeopleCtrl, reloadOnSearch:false })
+    .when(_path, { templateUrl:"partials/home.html", controller:HomeCtrl })
+    .when(_path + ":userName", { templateUrl:"partials/chat.html", controller:ChatCtrl })
+    .when(_path + "!search?:query", { templateUrl:"partials/people.html", controller:PeopleCtrl, reloadOnSearch:false })
     //Otherwise for Rediect
     .otherwise({ redirectTo:"/" });
 
