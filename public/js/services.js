@@ -1,7 +1,4 @@
 'use strict';
-
-
-
 /* ===================================
  services.js
 
@@ -16,18 +13,42 @@
  */
 angular.module("vline.ui.AnalyticsService", [])
   .factory("vline.ui.AnalyticsService", ["$rootScope", "$location", function ($rootScope, $location) {
-  var _host = $location.host() === "localhost";
+  /*
+   location
+   $$absUrl: "http://127.0.0.1:3000/"
+   $$compose: function (){var b=qb(this.$$search),c=this.$$hash?"#"+Ya(this.$$hash):"";this.$$url=Gb(this.$$path)+(b?"?"+b:"")+c;this.$$absUrl=la(this.$$protocol,
+   $$hash: ""
+   $$host: "127.0.0.1"
+   $$parse: function (b){var c=wa(b,this);if(c.path.indexOf(a)!==0)throw Error('Invalid url "'+b+'", missing path prefix "'+a+'" !');this.$$path=decodeURIComponent(c.path.substr(a.length));this.$$search=Wa(c.search);this.$$hash=c.hash&&decodeURIComponent(c.hash)||"";this.$$compose()}
+   $$path: "/"
+   $$port: 3000
+   $$protocol: "http"
+   $$replace: false
+   $$rewriteAppUrl: function (a){if(a.indexOf(c)==0)return a}
+   $$search: Object
+   $$url: "/"
+   */
+
+  var _host = $location.host() || "localhost";
   return {
     CALL_CATEGORY:"Calls",
     CALL_ACTION_OUTBOUND:"outbound",
     CALL_ACTION_INBOUND:"inbound",
     LOGIN_CATEGORY:"Login Data",
     LOGIN_BUTTON_CLICK:"login click",
-    track:function (e, t, r, i, s) {
-      !_host && _gaq && _gaq.push(["_trackEvent", e, t, r, i, s])
+    track : function (e, t, r, i, s) {
+      console.log("AnalyticsService _track", arguments);
+      //["Login Data", "login click"]
+      //["Calls", "outbound"]
+      if(!_host && _gaq) {
+        _gaq.push(["_trackEvent", e, t, r, i, s])
+      }
     },
     trackPageView:function (e) {
-      !_host && _gaq && _gaq.push(["_trackPageview", e])
+      console.log("AnalyticsService _trackPageView", arguments);
+      if(!_host && _gaq) {
+        _gaq.push(["_trackPageview", e])
+      }
     }
   }
 }]);
@@ -48,18 +69,109 @@ angular.module("vline.ui.DirectoryService", [])
   function a() {
   };
 
-  function c(e) {
-    this.id = e
+  a.prototype = {
+    getSender:function () {
+      function _prot() {
+      }
+
+      _prot.prototype = {
+        getDisplayName:function () {
+          return testCallDisplayName
+        },
+        getThumbnailUrl:function () {
+          return testCallThumbnailUrl
+        }
+      };
+      var t = new _prot;
+      return t
+    },
+    getId:function () {
+      return testCallId
+    },
+    getDisplayName:function () {
+      return testCallDisplayName
+    },
+    getBody:function () {
+      return "\nTo test that your microphone and camera are configured correctly, click the green \"Video Call\" button.\n\nAfter the call connects, you should see live video from your camera.\n\nIf you unmute the audio, you should also hear yourself.\n\nIf you hear any feedback after unmuting, try turning down the volume on your computer. Don't worry, you won't hear feedback when you call another computer."
+    },
+    getCreationTime:function () {
+      return (new Date).getTime()
+    },
+    getSenderId:function () {
+      return testCallId
+    }
+  };
+
+  a.prototype.getSenderId = function () {
+    return testCallId
+  };
+
+  function c(uid) {
+    this.id = uid
       , this.unreadCount = 0
       , this.mediaSessions = []
       , this.localVideoUrls = []
       , this.remoteVideoUrls = []
       , this.remoteAudioUrls = []
-      , this.username = e.substr(e.indexOf(":") + 1)
+      , this.username = uid.substr(uid.indexOf(":") + 1)
       , this.displayName = ""
       , this.thumbnailUrl = "images/gravatars/gravatar-140.png"
     ;
   }
+
+  c.prototype = {
+    getId:function () {
+      return this.id
+    },
+    getUserName:function () {
+      return this.username
+    },
+    getPresenceState:function () {
+      return this.channel && this.channel.getPresenceState() || "offline"
+    },
+    getDisplayName:function (t) {
+      return !t && $rootScope.isTestCallUser(this) ? testCallDisplayName : this.channel && this.channel.getDisplayName() || this.displayName
+    },
+    getThumbnailUrl:function (t) {
+      return !t && $rootScope.isTestCallUser(this) ? testCallThumbnailUrl : this.channel && this.channel.getThumbnailUrl() || this.thumbnailUrl
+    },
+    getUnreadCount:function () {
+      return this.channel && this.channel.getUnreadCount() || 0
+    },
+    getProfileUrl:function () {
+      return "https://github.com/" + this.username
+    },
+    getLocation:function () {
+      return this.location
+    },
+    setDisplayName:function (e) {
+      this.displayName = e
+    },
+    setThumbnailUrl:function (e) {
+      this.thumbnailUrl = e
+    },
+    setLocation:function (e) {
+      this.location = e
+    },
+    getChannel:function () {
+      return this.channel
+    },
+    getMessages:function () {
+      if (this.messagesRequested) return;
+      this.messagesRequested = true, $rootScope.isTestCallUser(this) ? this.messages = l : this.channel && this.requestMessages_()
+    },
+    setActive:function () {
+      this.channel ? this.channel.setActive(true) : this.setActiveRequested = true
+    },
+    setChannel:function (e) {
+      this.channel = e, this.messagesRequested && this.requestMessages_(), this.setActiveRequested && this.channel.setActive(true)
+    },
+    requestMessages_:function () {
+      this.channel.getMessages().done(function (t) {
+        this.messages = t, $rootScope.refreshUI(), $rootScope.isSelected(this) && $rootScope.scrollToBottom()
+      }, this)
+    }
+  };
 
   function C() {
     !p && v && m === 0 && (p = true, $rootScope.contacts = g, $rootScope.searchContacts = y, $rootScope.refreshUI(), $rootScope.$emit("directory.ready"))
@@ -126,101 +238,9 @@ angular.module("vline.ui.DirectoryService", [])
     C();
   };
 
-  a.prototype = {
-    getSender:function () {
-      function _prot() {
-      }
-
-      _prot.prototype = {
-        getDisplayName:function () {
-          return testCallDisplayName
-        },
-        getThumbnailUrl:function () {
-          return testCallThumbnailUrl
-        }
-      };
-      var t = new _prot;
-      return t
-    },
-    getId:function () {
-      return testCallId
-    },
-    getDisplayName:function () {
-      return testCallDisplayName
-    },
-    getBody:function () {
-      return "\nTo test that your microphone and camera are configured correctly, click the green \"Video Call\" button.\n\nAfter the call connects, you should see live video from your camera.\n\nIf you unmute the audio, you should also hear yourself.\n\nIf you hear any feedback after unmuting, try turning down the volume on your computer. Don't worry, you won't hear feedback when you call another computer."
-    },
-    getCreationTime:function () {
-      return (new Date).getTime()
-    },
-    getSenderId:function () {
-      return testCallId
-    }
-  };
-
-  a.prototype.getSenderId = function () {
-    return testCallId
-  };
-
   var f = new a
     , l = [f]
     ;//-------
-
-  c.prototype = {
-    getId:function () {
-      return this.id
-    },
-    getUserName:function () {
-      return this.username
-    },
-    getPresenceState:function () {
-      return this.channel && this.channel.getPresenceState() || "offline"
-    },
-    getDisplayName:function (t) {
-      return !t && $rootScope.isTestCallUser(this) ? testCallDisplayName : this.channel && this.channel.getDisplayName() || this.displayName
-    },
-    getThumbnailUrl:function (t) {
-      return !t && $rootScope.isTestCallUser(this) ? testCallThumbnailUrl : this.channel && this.channel.getThumbnailUrl() || this.thumbnailUrl
-    },
-    getUnreadCount:function () {
-      return this.channel && this.channel.getUnreadCount() || 0
-    },
-    getProfileUrl:function () {
-      return "https://github.com/" + this.username
-    },
-    getLocation:function () {
-      return this.location
-    },
-    setDisplayName:function (e) {
-      this.displayName = e
-    },
-    setThumbnailUrl:function (e) {
-      this.thumbnailUrl = e
-    },
-    setLocation:function (e) {
-      this.location = e
-    },
-    getChannel:function () {
-      return this.channel
-    },
-    getMessages:function () {
-      if (this.messagesRequested) return;
-      this.messagesRequested = true, $rootScope.isTestCallUser(this) ? this.messages = l : this.channel && this.requestMessages_()
-    },
-    setActive:function () {
-      this.channel ? this.channel.setActive(true) : this.setActiveRequested = true
-    },
-    setChannel:function (e) {
-      this.channel = e, this.messagesRequested && this.requestMessages_(), this.setActiveRequested && this.channel.setActive(true)
-    },
-    requestMessages_:function () {
-      this.channel.getMessages().done(function (t) {
-        this.messages = t, $rootScope.refreshUI(), $rootScope.isSelected(this) && $rootScope.scrollToBottom()
-      }, this)
-    }
-  };
-
 
   var h
     , p = false
@@ -328,115 +348,111 @@ angular.module("vline.ui.DirectoryService", [])
  * NotificationService
  */
 angular.module("vline.ui.NotificationService", [])
-  .factory("vline.ui.NotificationService", ["$rootScope", "$log", "$window", function (e, t, n) {
-  var r = !!n.webkitNotifications
-    , i = 0
-    ;//--------
-  r && (i = window.webkitNotifications.checkPermission());
-  var s = i === 0
-    , o = 5500
-    ;//--------
+  .factory("vline.ui.NotificationService", ["$rootScope", "$log", "$window", function ($rootScope, $log, $window) {
+    var _hasWebkitNotifications = !!$window.webkitNotifications
+      , _perm = 0
+      ;//--------
+    _hasWebkitNotifications && (_perm = window.webkitNotifications.checkPermission());
+    var s = _perm === 0
+      , o = 5500
+      ;//--------
 
-  return {
-    requestPermission:function () {
-      if (!r) return;
-      n.webkitNotifications.requestPermission(function () {
-        i = n.webkitNotifications.checkPermission(), s = i === 0, e.$emit("notificationService.toggle")
-      })
-    },
-    notify:function (e, t, n, r) {
-      var i = this.create(e, t, n);
-      return i && (i.show(), r === undefined && (r = o), r !== -1 && setTimeout(function () {
-        i.close()
-      }, r)), i
-    },
-    create:function (e, t, i) {
-      return !r || !s ? null : n.webkitNotifications.createNotification(e, t, i)
-    },
-    isNotificationRequested:function () {
-      return i != 1
-    },
-    notifyOn:function () {
-      this.requestPermission()
+    return {
+      requestPermission:function () {
+        if (!_hasWebkitNotifications) return;
+        $window.webkitNotifications.requestPermission(function () {
+          _perm = $window.webkitNotifications.checkPermission();
+          s     = _perm === 0;
+          $rootScope.$emit("notificationService.toggle");
+        })
+      },
+      notify:function (e, t, n, r) {
+        var _notification = this.create(e, t, n);
+        return _notification && (_notification.show(), r === undefined && (r = o), r !== -1 && setTimeout(function () {
+          _notification.close()
+        }, r)), _notification
+      },
+      create:function (e, t, i) {
+        return !_hasWebkitNotifications || !s ? null : $window.webkitNotifications.createNotification(e, t, i)
+      },
+      isNotificationRequested:function () {
+        return _perm != 1
+      },
+      notifyOn:function () {
+        this.requestPermission()
+      }
     }
-  }
-}
-]);
+  }]);
 
 /*
  * UpdateService
  */
 angular.module("vline.ui.UpdateService", [])
-  .factory("vline.ui.UpdateService", ["$rootScope", "$log", "$window", "$location", "$http", "$vline",
-  function (e, t, n, r, i, s) {
-    function E() {
-      return !d && v === 0
-    }
+  .factory("vline.ui.UpdateService", ["$rootScope", "$log", "$window", "$location", "$http", "$vline", function ($rootScope, $log, $window, $location, $http, $vline) {
 
-    function S(e, t) {
-      m || (m = true, setTimeout(function () {
-        m = false;
-        if (g) {
-          E() ? (g = false, x()) : S(w);
-          return
-        }
-        var e = {
-          method:"HEAD",
-          url:p,
-          headers:{
-            "If-Modified-Since":y,
-            "max-age":0
-          }
-        };
-        i(e).success(function (e, n, r, i) {
-          var s = r("Last-Modified"),
-            o = r("Date");
+  function E() { return !d && v === 0 }
+  function locationReload() { location.reload() }
+
+  function S(e, t) {
+    m || (m = true, setTimeout(function () {
+      m = false;
+      if (g) {
+        E() ? (g = false, locationReload()) : S(w);
+        return
+      }
+
+      var _reqObject = { method:"HEAD", url:_orig, headers:{ "If-Modified-Since":y, "max-age":0 } };
+
+      $http(_reqObject)
+        .success(function (e, n, r, i) {
+          var s = r("Last-Modified")
+            , o = r("Date")
+            ;//-----
           s ? y = s : o && (y = o), n === 200 && !t ? (g = true, S(0)) : S(b)
-        }).error(function (e, t, n, r) {
-            S(b)
-          })
-      }, e))
-    }
-
-    function x() {
-      location.reload()
-    }
-
-    var o = "http"
-      , u = 80
-      , a = "https"
-      , f = 443
-      , l = r.protocol()
-      , c = r.port()
-      , h = r.host()
-      ;//-----
-
-    l === o ? c === u && (c = undefined) : l == a && c === f && (c = undefined);
-    var p = l + "://" + h;
-    c && (p += ":" + c);
-
-    var d = true
-      , v = 0
-      , m = false
-      , g = false
-      , y = (new Date(0)).toUTCString()
-      , b = 18e5
-      , w = 6e4
-      ;//-----
-
-    s.on("add:mediaSession",function () {
-      v++
-    }).on("remove:mediaSession", function () {
-        v--
-      }), $(n).focus(function () {
-      d = true
-    }).blur(function () {
-        d = false
-      }), h !== "localhost" && !vline.Browser.isSafari() && S(0, true);
-
-    //var T = {};
-    return {};
+        })
+        .error(function (e, t, n, r) {
+          S(b)
+        })
+    }, e))
   }
-]);
+
+  var _http       = "http"
+    , _https      = "https"
+    , _httpPort   = 80
+    , _httpsPort  = 443
+    , _prot = $location.protocol()
+    , _port = $location.port()
+    , _host = $location.host()
+    , _orig
+    ;//-----
+
+  _prot === _http ? _port === _httpPort && (_port = undefined) : _prot == _https && _port === _httpsPort && (_port = undefined);
+  _orig = _prot + "://" + _host;
+  _port && (_orig += ":" + _port);
+
+  var d = true
+    , v = 0
+    , m = false
+    , g = false
+    , y = (new Date(0)).toUTCString()
+    , b = 1800000
+    , w = 60000
+    ;//-----
+
+  $vline
+    .on("add:mediaSession",     function () { v++; })
+    .on("remove:mediaSession",  function () { v--; })
+  ;//-----
+
+  $($window)
+    .focus(function () { d = true })
+    .blur(function () { d = false })
+  ;//-----
+
+  _host !== "localhost" && !vline.Browser.isSafari() && S(0, true);
+
+  //var T = {};
+  return {};
+}]);
 
 // End services.js
