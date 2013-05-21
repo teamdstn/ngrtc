@@ -1,12 +1,11 @@
 'use strict';
 
-/* ===================================
- controllers.js
- =================================== */
-
-// AppCtrl
+/*
+ AppCtrl
+ */
 function AppCtrl($scope, $rootScope, $element, $routeParams, $log, $timeout, $window, $location, $vline, $vlineui, DirectoryService, NotificationService, UpdateService, AnalyticsService) {
 
+  //private method(s)
   function declineCall(e) {
     var n = $rootScope.outstandingNotificationMap[e];
     if (n) {
@@ -16,98 +15,99 @@ function AppCtrl($scope, $rootScope, $element, $routeParams, $log, $timeout, $wi
       }
       n = [];
     }
-  };
+  }
 
   function startHdVideoCall(n) {
     if ($scope.callButtonedDisabled) return;
     AnalyticsService.track(AnalyticsService.CALL_CATEGORY, AnalyticsService.CALL_ACTION_OUTBOUND);
     var r = $rootScope.getSelectedChannel();
     r && (r.getId() === $rootScope.owner.getId() && (n || (n = {}), n.loopback = true), r.startMedia(n), n && n.loopback && $rootScope.muteCall(), $rootScope.selectUserId(r.getId()))
-  };
+  }
 
   function acceptHdVideoCall(e, n) {
     AnalyticsService.track(AnalyticsService.CALL_CATEGORY, AnalyticsService.CALL_ACTION_INBOUND);
     var _channelId = e.getChannel().getId();
-    declineCall(_channelId), $rootScope.selectUserId(_channelId), e.start(n)
-  };
+    declineCall(_channelId), $rootScope.selectUserId(_channelId);
+    e.start(n);
+  }
 
   function setFocus() {
     $("#vl-primary-text").focus()
-  };
+  }
 
   function w(e, n, r, i) {
     var o = NotificationService.notify(e.getThumbnailUrl(), n, r, i);
-    return o && (o.onclick = function () {
-      $timeout(function () {
-        $rootScope.select(e), o.close()
-      }, 0, true)
-    }), o
-  };
+    return o && (o.onclick = function () { $timeout(function () { $rootScope.select(e), o.close()}, 0, true)}), o
+  }
 
   function E(e, n) {
     n && e && ($rootScope.outstandingNotificationMap[e.getId()] ? $rootScope.outstandingNotificationMap[e.getId()].push(n) : $rootScope.outstandingNotificationMap[e.getId()] = [n])
-  };
+  }
 
 
-  function x(e) {
+  function serChannel(e) {
     var _channel = $rootScope.getSelectedChannel();
-    _channel && _channel.setActive(e), e && $rootScope.refreshUI()
-  };
+    _channel && _channel.setActive(e);
+    e && $rootScope.refreshUI();
+  }
 
   function k(e) {
-    $location.path(b + e), AnalyticsService.trackPageView(e)
-  };
+    $location.path(b + e);
+    AnalyticsService.trackPageView(e);
+  }
 
   function L() {
     return $location.path().substr(b.length - 1)
-  };
+  }
 
-  function A(e) {
+  function removeSession(e) {
     e.target === $rootScope.session && ($rootScope.session = null)
-  };
+  }
 
-  function O(e) {
-    var n = e.target.getChannel(),
-      r = e.target,
-      i = DirectoryService.getContact(n.getId(), true, true);
-    if ((!$rootScope.isSelected(i) || !$rootScope.focused) && r.isIncoming()) {
-      var s = w(i, "Incoming Call", i.getDisplayName() + " is calling...", -1);
-      s && E(i, s)
+  function addMediaSession(obj) {
+    var _channel = obj.target.getChannel()
+      , _target = obj.target
+      , _contact = DirectoryService.getContact(_channel.getId(), true, true)
+      ;//-----
+    if ((!$rootScope.isSelected(_contact) || !$rootScope.focused) && r.isIncoming()) {
+      var s = w(_contact, "Incoming Call", _contact.getDisplayName() + " is calling...", -1);
+      s && E(_contact, s)
     }
-    r.on("exitState:incoming", function () {
-      declineCall(n.getId())
-    }), $rootScope.select(i)
-  };
+    _target.on("exitState:incoming", function () {
+      declineCall(_channel.getId())
+    });
+    $rootScope.select(_contact);
+  }
 
-  function M(e) {
+  function removeMediaSession(e) {
     var t = e.target.getChannel();
     declineCall(t.getId())
-  };
+  }
 
-  function _(e) {
-    P(e.target, false)
-  };
+  function addIm(e) {
+    setIm(e.target, false)
+  }
 
-  function D(e) {
-    P(e.message, true)
-  };
+  function receiveIm(e) {
+    setIm(e.message, true)
+  }
 
-  function P(n, r) {
+  function setIm(n, r) {
     var i = DirectoryService.getContact(n.getChannelId(), true, true)
       , s = $rootScope.isSelected(i)
       ;//-----
     s && $rootScope.scrollToBottom(), NotificationService.notifyOn(), r && n.getSenderId() !== $rootScope.owner.getId() && (!s || !$scope.focused) && w(i, i.getDisplayName(), n.getBody(false, true))
-  };
+  }
 
   function getContact(e) {
     var t = e.target;
     DirectoryService.getContact(t.getId(), true, true)
-  };
+  }
 
-  function locSearch(e) {
+  function readyCredentials(e) {
     var t = $location.search();
     t.authToken && $location.search("authToken", null)
-  };
+  }
 
   var d = false
     , v = false
@@ -117,6 +117,7 @@ function AppCtrl($scope, $rootScope, $element, $routeParams, $log, $timeout, $wi
     , b = y.substr(0, y.lastIndexOf("/") + 1)
     ;//--------
 
+  //rootScope(s)
   $rootScope.$vline = $vline;
   $rootScope.predicate = ["-getPresenceState()", "getDisplayName()"];
   $rootScope.peopleQuery = "";
@@ -132,8 +133,6 @@ function AppCtrl($scope, $rootScope, $element, $routeParams, $log, $timeout, $wi
   $rootScope.focused = true;
 
   $scope.callButtonedDisabled = false;
-
-  vlineAppConf.logoImg || $vlineui.createTextLogo(vlineAppConf.title, "vl-login-logo");
 
   $rootScope.showNotSupported = function () {
     return !vline.Browser.supportsChat() && !vline.Browser.isChrome();
@@ -154,55 +153,43 @@ function AppCtrl($scope, $rootScope, $element, $routeParams, $log, $timeout, $wi
     return vline.Browser.supportsHd()
   };
   $rootScope.login = function () {
-    console.log("login");
-
     $rootScope.loggingIn = true, DirectoryService.login().always(function () {
       $rootScope.loggingIn = false;
       $rootScope.refreshUI()
     }), AnalyticsService.track(AnalyticsService.LOGIN_CATEGORY, AnalyticsService.LOGIN_BUTTON_CLICK)
   };
   $rootScope.logout = function () {
-    console.log("logout");
-
     $rootScope.select("/");
     $vline.logout();
   };
   $rootScope.connect = function () {
-    console.log("connect");
     $vline.connect()
   };
   $rootScope.disconnect = function () {
-    console.log("disconnect");
     $vline.disconnect()
   };
   $rootScope.startAudioCall = function () {
-    console.log("startAudioCall");
     startHdVideoCall({
       audio:true
     })
   };
   $rootScope.startVideoCall = function () {
-    console.log("startVideoCall");
     startHdVideoCall()
   };
   $rootScope.startHdVideoCall = function () {
-    console.log("startHdVideoCall");
     startHdVideoCall({
       audio:true, video:true, hd:true
     })
   };
   $rootScope.acceptAudioCall = function (e) {
-    console.log("accept : acceptAudioCall");
     acceptHdVideoCall(e, {
       audio:true
     })
   };
   $rootScope.acceptVideoCall = function (e) {
-    console.log("accept : acceptVideoCall");
     acceptHdVideoCall(e)
   };
   $rootScope.acceptHdVideoCall = function (e) {
-    console.log("accept : acceptHdVideoCall");
     acceptHdVideoCall(e, {
       audio:true, video:true, hd:!true
     })
@@ -401,29 +388,48 @@ function AppCtrl($scope, $rootScope, $element, $routeParams, $log, $timeout, $wi
     $rootScope.isSelected(n) && $rootScope.select("/")
   });
 
+  vlineAppConf.logoImg || $vlineui.createTextLogo(vlineAppConf.title, "vl-login-logo");
 
   //Toouch
   var j;
-  $($window).focus(function () {
-    $rootScope.focused = true, x(true)
-  }).blur(function () {
+  $($window).
+    focus(function () {
+      $rootScope.focused = true;
+      serChannel(true);
+    }).
+    blur(function () {
       $rootScope.focused = false;
       var e = $rootScope.getSelectedChannel();
-      x(false)
-    }).resize(function () {
+      serChannel(false)
+    }).
+    resize(function () {
       $rootScope.$broadcast("resize")
-    }).on("transitionend webkitTransitionEnd",function () {
-
-    }).on("touchstart",function (e) {
-      j || $("body").removeClass("no-touch"), j = e
-    }).on("touchmove", function (e) {
+    }).
+    on("transitionend webkitTransitionEnd", function () {
+    }).
+    on("touchstart",function (e) {
+      j || $("body").removeClass("no-touch");
+      j = e;
+    }).
+    on("touchmove", function (e) {
       var t = $(e.target).closest(".vl-scroll");
       (t.length === 0 || e.originalEvent.pageY > j.originalEvent.pageY && t.prop("scrollTop") == 0 || e.originalEvent.pageY < j.originalEvent.pageY && t.prop("scrollTop") + t.prop("offsetHeight") >= t.prop("scrollHeight")) && e.preventDefault()
-    }), $vline.on("recv add remove change addItem removeItem", $rootScope.refreshUI, $rootScope).on("change:unreadCount", getContact).on("change:totalUnreadCount", $rootScope.setTitle).on("remove:session", A).on("add:mediaSession", O).on("remove:mediaSession", M).on("recv:im", D).on("add:im", _).on("ready:credentials", locSearch)
+    });
+  $vline.
+    on("recv add remove change addItem removeItem", $rootScope.refreshUI, $rootScope).
+    on("change:unreadCount", getContact).on("change:totalUnreadCount", $rootScope.setTitle).
+    on("remove:session", removeSession).
+    on("add:mediaSession", addMediaSession).
+    on("remove:mediaSession", removeMediaSession).
+    on("recv:im", receiveIm).
+    on("add:im", addIm).
+    on("ready:credentials", readyCredentials);
 }
 AppCtrl.$inject = ["$scope", "$rootScope", "$element", "$routeParams", "$log", "$timeout", "$window", "$location", "$vline", "$vlineui", "vline.ui.DirectoryService", "vline.ui.NotificationService", "vline.ui.UpdateService", "vline.ui.AnalyticsService"];
 
-
+/*
+  VideoPanelCtrl
+*/
 function VideoPanelCtrl($scope, $rootScope, $element, $vline, DirectoryService) {
   function v() {
     $scope.videoCount = 0, s = o = 0, a = $('<div class="vl-video-frame vl-background" style="position:absolute;top:0;bottom:0;left:0;right:0"></div>'), $element.append(a).on("dblclick", A), $(document).on("webkitfullscreenchange mozfullscreenchange", g)
@@ -451,34 +457,42 @@ function VideoPanelCtrl($scope, $rootScope, $element, $vline, DirectoryService) 
   };
 
   function b(n, r) {
+
     function f() {
       o.addClass("vl-active " + r).css({
         display:"",
         position:"absolute"
-      }), s.css({
+      });
+      s.css({
         display:"",
         width:"100%",
         height:"100%"
-      }), L(true), $scope.videoCount === 0 ? window.setTimeout(function () {
-        N(o, {
-          opacity:1
-        }, true)
-      }, 300) : o.css({
-        opacity:1
-      }, true), $scope.videoCount++, $rootScope.refreshUI()
+      });
+
+      L(true);
+      if($scope.videoCount === 0){
+        window.setTimeout(function () {N(o, { opacity:1 }, true)}, 300);
+      }else{
+        o.css({ opacity:1}, true);
+        $scope.videoCount++;
+        $rootScope.refreshUI();
+      }
     }
 
     u++;
+    var i = { display:"none"};
 
-    var i = {
-      display:"none"
-    };
     if (n.isLocal() && !n.hasVideo()) return;
     var s = n.createMediaElement();
     if (!s) return;
-    s = $(s), s.css(i).addClass("vl-video"), s.prop("id", n.getId() + "-video");
+
+    s = $(s);
+    s.css(i).addClass("vl-video");
+    s.prop("id", n.getId() + "-video");
+
     var o = $('<div class="vl-video-wrapper" style="display:none;opacity:0"></div>').append(s).prop("id", n.getId());
-    a.prepend(o), n.hasVideo() && (n.isStarted() ? f() : n.on("mediaStream:start", f))
+    a.prepend(o);
+    n.hasVideo() && (n.isStarted() ? f() : n.on("mediaStream:start", f))
   };
 
   function w(e, t) {
@@ -577,80 +591,139 @@ function VideoPanelCtrl($scope, $rootScope, $element, $vline, DirectoryService) 
 };
 VideoPanelCtrl.$inject = ["$scope", "$rootScope", "$element", "$vline", "vline.ui.DirectoryService"];
 
-// --- homeController
+
+/*
+ HomeCtrl
+*/
 function HomeCtrl($scope, $rootScope, $routeParams, $location, $window, DirectoryService) {
+  //rootScope(s)
   $rootScope.getViewLabel = function () {
     return "Home"
-  }, $scope.shareLink = function () {
+  };
+  //scope(s)
+  $scope.shareLink = function () {
     return $rootScope.owner ? "https://gittogether.com/" + $rootScope.owner.getUserName() : ""
-  }, $scope.hashTags = function () {
+  };
+  $scope.hashTags = function () {
     return "&hashtags=WebRTC,GitTogether"
-  }, $scope.shareText = function () {
+  };
+  $scope.shareText = function () {
     return "Video%20chat%20with%20me%20on%20GitTogether%20using%20my%20personalized%20link:"
-  }, $scope.share = function () {
+  };
+  $scope.share = function () {
     $window.open("https://plus.google.com/share?url=" + $scope.shareLink(), "", "menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=600,width=600")
-  }, $scope.tweet = function () {
+  };
+  $scope.tweet = function () {
     $window.open("https://twitter.com/intent/tweet?text=" + $scope.shareText() + "&url=" + $scope.shareLink() + $scope.hashTags(), "_blank")
   }
 };
 HomeCtrl.$inject = ["$scope", "$rootScope", "$routeParams", "$location", "$window", "vline.ui.DirectoryService"];
 
-// --- chatController
+/*
+ ChatCtrl
+*/
 function ChatCtrl($scope, $rootScope, $routeParams, $vline, $vlineui, DirectoryService, NotificationService) {
-  function f(n) {
-    var r = n.target;
-    $rootScope.getSelectedChannel() == r && (a = true, $scope.$apply(), $rootScope.scrollToBottom())
+
+  var isHandShakes
+    , isTyping = false
+    ;//-----
+
+  //private method(s)
+  function startTyping(obj) {
+    var _target = obj.target;
+    $rootScope.getSelectedChannel() == _target && (isTyping = true, $scope.$apply(), $rootScope.scrollToBottom())
   }
 
-  function l(n) {
-    var r = n.target;
-    $rootScope.getSelectedChannel() == r && (a = false, $scope.$apply())
+  function endTyping(obj) {
+    var _target = obj.target;
+    $rootScope.getSelectedChannel() == _target && (isTyping = false, $scope.$apply())
   }
 
-  function c() {
-    if (u) return;
+  function handShakes() {
+    if (isHandShakes){
+      return;
+    }
+
     var r = $rootScope.select(DirectoryService.getContactByName($routeParams.userName, true, true));
     r && (r.getMessages(), r.setActive()), $scope.scrollToBottom();
-    var o, a = true;
-    r.getId() === $rootScope.owner.getId() && (a = false, o = "You cannot send chat messages to this user."), u = $vlineui.createMessageInput($rootScope.session, a, o), u.setPersonId(r.id), u.render($(".vl-content-footer").empty()[0])
+    var msg, a = true;
+    r.getId() === $rootScope.owner.getId() && (a = false, msg = "You cannot send chat messages to this user.");
+    isHandShakes = $vlineui.createMessageInput($rootScope.session, a, msg);
+    isHandShakes.setPersonId(r.id);
+    isHandShakes.render($(".vl-content-footer").empty()[0]);
   }
 
-  var u, a = false;
+  //rootScope(s)
+  $rootScope.getMessagesFromUser = function (e) {
+    if ($rootScope.isTestCallUser(e)) {
+      return e.messages;
+    }
+    if (e && e.messages) {
+      return e.messages.getImpl();
+    }
+  };
+
+  $rootScope.session ? handShakes() : $rootScope.$on("sessionReady", handShakes);
+
+  //scope(s)
   $scope.send = function () {
     $rootScope.selectedUser.channel.send($scope.outText), NotificationService.notifyOn(), $scope.outText = "", $scope.scrollToBottom()
-  }, $scope.isFromSelf = function (t) {
+  };
+  $scope.isFromSelf = function (t) {
     return $scope.owner.id === t.getSenderId()
-  }, $scope.msgSender = function (t) {
+  };
+  $scope.msgSender = function (t) {
     return $scope.isFromSelf(t) ? $scope.owner : $scope.selectedUser
-  }, $scope.showCallButtons = function () {
-    var e = $rootScope.getSelectedChannel();
-    return e && e.isMediaSupported() && !$vline.hasMediaSessions()
-  }, $scope.showDownloadButton = function () {
+  };
+  $scope.showCallButtons = function () {
+    var selectedChannel = $rootScope.getSelectedChannel();
+    return selectedChannel && selectedChannel.isMediaSupported() && !$vline.hasMediaSessions()
+  };
+  $scope.showDownloadButton = function () {
     return !$rootScope.supportsWebRtc() && !vline.Browser.isMobile()
-  }, $scope.isTyping = function () {
-    return a
-  }, $rootScope.getMessagesFromUser = function (e) {
-    if ($rootScope.isTestCallUser(e)) return e.messages;
-    if (e && e.messages) return e.messages.getImpl()
-  }, $vline.on("typing:start", f).on("typing:end", l), $rootScope.getViewLabel = function () {
-    var e = $rootScope.selectedUser;
-    return "Chat" + (e ? " - " + e.getDisplayName() : "")
-  }, $rootScope.session ? c() : $rootScope.$on("sessionReady", c), $scope.$on("$destroy", function () {
-    u && u.dispose(), u = null
-  })
+  };
+
+  $scope.isTyping = function () {
+    return isTyping
+  };
+
+  $scope.$on("$destroy", function () {
+    isHandShakes && isHandShakes.dispose();
+    isHandShakes = null;
+  });
+
+  $vline.on("typing:start", startTyping).on("typing:end", endTyping), $rootScope.getViewLabel = function () {
+    var _selectedUser = $rootScope.selectedUser;
+    return "Chat" + (_selectedUser ? " - " + _selectedUser.getDisplayName() : "")
+  };
 };
 ChatCtrl.$inject = ["$scope", "$rootScope", "$routeParams", "$vline", "$vlineui", "vline.ui.DirectoryService", "vline.ui.NotificationService"];
 
-// --- peopleController
+/*
+ PeopleCtrl
+ */
 function PeopleCtrl($scope, $rootScope, $log, $filter, DirectoryService) {
-  function o() {
-    $rootScope.searchText = null, $rootScope.searchResults = false, DirectoryService.search(), $scope.search()
+  var _searchTextBox = document.getElementById("search-text-box");
+
+  if(_searchTextBox){
+    _searchTextBox.focus();
   }
 
-  var s = document.getElementById("search-text-box");
-  $scope.searchValue = $rootScope.searchText, s && s.focus(), $rootScope.getViewLabel = function () {
+  //private method(s)
+  function ctrlInitialize() {
+    $rootScope.searchText     = null;
+    $rootScope.searchResults  = false;
+    DirectoryService.search();
+    $scope.search();
+  }
+
+  //rootScope(s)
+  $rootScope.getViewLabel = function () {
     return "People Search"
-  }, $scope.filterByName = function (e) {
+  };
+
+  //scope(s)
+  $scope.filterByName = function (e) {
     function r(t) {
       if (!e.getDisplayName() && !e.getId()) return false;
       if (e.getDisplayName() && e.getDisplayName().toLowerCase().indexOf(t) != -1) return true;
@@ -665,10 +738,21 @@ function PeopleCtrl($scope, $rootScope, $log, $filter, DirectoryService) {
     if (!$rootScope.searchText) return false;
     var n = $rootScope.searchText.toLowerCase();
     return r(n)
-  }, $scope.search = function () {
+  };
+
+  $scope.search = function () {
     $scope.filteredContacts = $filter("filter")($scope.contacts, $scope.filterByName), DirectoryService.search($rootScope.searchText)
-  }, $scope.search(), $scope.onChange = function () {
-    $scope.searchValue ? $rootScope.searchText = $scope.searchValue : o()
-  }
+  };
+
+  $scope.onChange = function () {
+    if($scope.searchValue){
+      $rootScope.searchText = $scope.searchValue
+    }else{
+      ctrlInitialize()
+    }
+  };
+  $scope.searchValue = $rootScope.searchText;
+  $scope.search();
+
 };
 PeopleCtrl.$inject = ["$scope", "$rootScope", "$log", "$filter", "vline.ui.DirectoryService"];
