@@ -13,30 +13,30 @@
  */
 angular.module("vline.ui.ManagedProvider", ["ngResource"])
   // Constants
-  .constant("config.appId", vlineAppConf.appId)
+  .constant("config.appId",  vlineAppConf.appId)
   .constant("config.authId", vlineAppConf.authId)
-  .run(["vline.ui.DirectoryService", "$rootScope", "$vline", "$log", "$resource", "config.authId", function ($service, $rootScope, $vline, $log, $resource, authId) {
+  .run(["vline.ui.DirectoryService", "$rootScope", "$vline", "$log", "$resource", "config.authId", function (DirectoryService, $rootScope, $vline, $log, $resource, authId) {
 
   var o
-    , u
     , a = 0
-    , f = authId
-    , l = false
-    , c = f + ":"
+    , isLogin
+    , _domain = authId
+    , _prefix = _domain + ":"
+    , _supportsSearch = false
     ;//-----
 
   var _provider = {
     getDomain:function () {
-      return f
+      return _domain
     },
     getUserPrefix:function () {
-      return c
+      return _prefix
     },
     login:function () {
       return $vline.login(authId)
     },
     logout:function () {
-      u = false
+      isLogin = false
     },
     init:function (e, t, n) {
       o = e
@@ -44,7 +44,7 @@ angular.module("vline.ui.ManagedProvider", ["ngResource"])
     fetchContact:function (t, r) {
       var i = t.id;
       return $vline.getDefaultSession().getPerson(i).done(function (t) {
-        $service.addContact(_provider, i, t.getDisplayName(), t.getThumbnailUrl(), null, r)
+        DirectoryService.addContact(_provider, i, t.getDisplayName(), t.getThumbnailUrl(), null, r)
       }, _provider)
     },
     fetchAllContacts:function () {
@@ -54,7 +54,7 @@ angular.module("vline.ui.ManagedProvider", ["ngResource"])
           _provider.fetchContact({
             id:n
           }).done(function () {
-              --a === 0 && !u && (u = true, $service.providerLoaded(_provider))
+              --a === 0 && !isLogin && (isLogin = true, DirectoryService.providerLoaded(_provider))
             }, _provider)
         }, _provider), n.on("addItem", function (e) {
           var n = e.item.getPath(),
@@ -67,20 +67,22 @@ angular.module("vline.ui.ManagedProvider", ["ngResource"])
         }, this), n.on("removeItem", function (n) {
           var r = n.item.getPath(),
             i = r.substr(r.lastIndexOf("/") + 1);
-          $service.removeContact(i), $rootScope.refreshUI()
+          DirectoryService.removeContact(i), $rootScope.refreshUI()
         }, this)
       }, _provider)
     },
-    doSearch:function (e) {
+    doSearch:function (str) {
+      console.log(str);
     },
     canSearch:function () {
       return false
     },
     supportsSearch:function () {
-      return l
+      return _supportsSearch
     }
   };
-  $service.addProvider(_provider);
+
+  DirectoryService.addProvider(_provider);
 }]);
 
 
@@ -88,12 +90,12 @@ angular.module("vline.ui.ManagedProvider", ["ngResource"])
  * GithubProvider
  */
 angular.module("vline.ui.GithubProvider", ["ngResource"])
-  .constant("config.appId", vlineAppConf.appId)
-  .constant("config.authId", vlineAppConf.authId)
-  .run(["vline.ui.DirectoryService", "$rootScope", "$vline", "$log", "$resource", "config.authId", function (e, t, n, r, i, s) {
+  .constant("config.appId",  vlineAppConf.appId )
+  .constant("config.authId", vlineAppConf.authId )
+  .run(["vline.ui.DirectoryService", "$rootScope", "$vline", "$log", "$resource", "config.authId", function (DirectoryService, $rootScope, $vline, $log, $resource, authId) {
 
   function E(e, t) {
-    return i(v + e, {
+    return $resource(v + e, {
       access_token:l,
       callback:"JSON_CALLBACK"
     }, {
@@ -105,7 +107,7 @@ angular.module("vline.ui.GithubProvider", ["ngResource"])
 
   function S(n, i, s, o) {
     function u() {
-      --m === 0 && !h && (h = true, e.providerLoaded(w))
+      --m === 0 && !h && (h = true, DirectoryService.providerLoaded(_provider))
     }
 
     if (!c || !l) return undefined;
@@ -113,7 +115,7 @@ angular.module("vline.ui.GithubProvider", ["ngResource"])
     var a = n.get(i, function () {
       o(a), u()
     }, function () {
-      r.warn("Error fetching " + a), t.$emit("accountService.fetchError", a), u()
+      $log.warn("Error fetching " + a), $rootScope.$emit("accountService.fetchError", a), u()
     });
     return a;
   };
@@ -122,7 +124,7 @@ angular.module("vline.ui.GithubProvider", ["ngResource"])
     var s = e.get(n, function () {
       i(s)
     }, function () {
-      r.warn("Error searching " + s), t.$emit("accountService.fetchError", s), i()
+      $log.warn("Error searching " + s), $rootScope.$emit("accountService.fetchError", s), i()
     });
     return s
   };
@@ -130,14 +132,14 @@ angular.module("vline.ui.GithubProvider", ["ngResource"])
   function T(t, n) {
     var r = S(t, n, true, function () {
       angular.forEach(r.data, function (t) {
-        e.getContact(b + t.login)
+        DirectoryService.getContact(_prefix + t.login)
       })
     });
     return r
   };
 
   function N() {
-    t.following = T(u, {})
+    $rootScope.following = T(u, {})
   };
 
   function C() {
@@ -155,24 +157,32 @@ angular.module("vline.ui.GithubProvider", ["ngResource"])
     , m = 0
     , g = true
     , y = true
-    , b = "github:"
+    , _prefix = "github:"
     ;//------
 
-  var w = {
+  var _provider = {
     getDomain:function () {
       return DOMAIN
     },
     getUserPrefix:function () {
-      return b
+      return _prefix
     },
     login:function () {
-      return n.login(s)
+      return $vline.login(authId)
     },
     logout:function () {
       h = false
     },
     init:function (e, t) {
-      c = e, l = t, o = E("users/:userId"), u = E("user/following", true), a = E("user/orgs", true), f = E("orgs/:orgId/members", true), Search = E("legacy/user/search/:keyword", true)
+      c = e;
+      l = t;
+      o = E("users/:userId");
+      u = E("user/following", true);
+      a = E("user/orgs", true);
+      f = E("orgs/:orgId/members", true);
+      // WhereIsSearch
+      // Search = E("legacy/user/search/:keyword", true);
+
     },
     fetchContact:function (t, n) {
       var r = t.id,
@@ -182,19 +192,19 @@ angular.module("vline.ui.GithubProvider", ["ngResource"])
           userId:s
         }, false, function () {
           if (u.data && u.data.message === "Not Found") {
-            e.removeContact(r);
+            DirectoryService.removeContact(r);
             return
           }
-          e.addContact(w, r, u.data.name || u.data.login, u.data.avatar_url, u.data.location, n)
+          DirectoryService.addContact(_provider, r, u.data.name || u.data.login, u.data.avatar_url, u.data.location, n)
         });
       return u && (u.id = r), u
     },
     fetchAllContacts:function () {
-      N(), C(), t.developers.push(e.getContact(b + "bstrong", false, true), e.getContact(b + "kashr", false, true), e.getContact(b + "mooniac", false, true), e.getContact(b + "thughes", false, true))
+      N(), C(), $rootScope.developers.push(DirectoryService.getContact(_prefix + "bstrong", false, true), DirectoryService.getContact(_prefix + "kashr", false, true), DirectoryService.getContact(_prefix + "mooniac", false, true), DirectoryService.getContact(_prefix + "thughes", false, true))
     },
     doSearch:function (n) {
       function i(n) {
-        t.canSearch = g = true, n && (d === p ? e.addSearchContacts(n.data.users, p) : p && p.length !== 0 && !/^\s*$/.test(str) && setTimeout(angular.bind(this, this.doSearch(p), 0)))
+        $rootScope.canSearch = g = true, n && (d === p ? DirectoryService.addSearchContacts(n.data.users, p) : p && p.length !== 0 && !/^\s*$/.test(str) && setTimeout(angular.bind(this, this.doSearch(p), 0)))
       }
 
       if (!c || !l) return undefined;
@@ -203,11 +213,11 @@ angular.module("vline.ui.GithubProvider", ["ngResource"])
       d = p;
       try {
         if (!p || 0 === p.length || /^\s*$/.test(p)) return;
-        return t.canSearch = g = false, e.releaseSearchResults(), x(Search, {
+        return $rootScope.canSearch = g = false, DirectoryService.releaseSearchResults(), x(Search, {
           keyword:p
         }, i)
       } catch (s) {
-        r.warn("Exception in search " + s), t.canSearch = g = true
+        $log.warn("Exception in search " + s), $rootScope.canSearch = g = true
       }
     },
     canSearch:function () {
@@ -217,7 +227,9 @@ angular.module("vline.ui.GithubProvider", ["ngResource"])
       return y
     }
   };
-  e.addProvider(w);
+
+  DirectoryService.addProvider(_provider);
+
 }]);
 
 /*
@@ -227,9 +239,10 @@ angular.module("vline.ui.GithubProvider", ["ngResource"])
 angular.module("vline.ui.OpensocialProvider", ["ngResource"])
   .constant("config.appId", vlineAppConf.appId)
   .constant("config.authId", vlineAppConf.authId)
-  .run(["vline.ui.DirectoryService", "$rootScope", "$vline", "$log", "$resource", "config.authId", function (e, t, n, r, i, s) {
+  .run(["vline.ui.DirectoryService", "$rootScope", "$vline", "$log", "$resource", "config.authId", function (DirectoryService, $rootScope, $vline, $log, $resource, authId) {
+
   function g(e, t) {
-    return i(c + e, {
+    return $resource(c + e, {
       access_token:a,
       callback:"JSON_CALLBACK"
     }, {
@@ -242,7 +255,7 @@ angular.module("vline.ui.OpensocialProvider", ["ngResource"])
 
   function y(n, i, s, o) {
     function u() {
-      --h === 0 && !l && (l = true, e.providerLoaded(m))
+      --h === 0 && !l && (l = true, DirectoryService.providerLoaded(_provider))
     }
 
     if (!f) return undefined;
@@ -250,7 +263,7 @@ angular.module("vline.ui.OpensocialProvider", ["ngResource"])
     var a = n.get(i, function () {
       o(a), u()
     }, function () {
-      r.warn("Error fetching " + a), t.$emit("accountService.fetchError", a), a.id && e.removeContact(a.id), u()
+      $log.warn("Error fetching " + a), $rootScope.$emit("accountService.fetchError", a), a.id && DirectoryService.removeContact(a.id), u()
     });
     return a
   }
@@ -258,7 +271,7 @@ angular.module("vline.ui.OpensocialProvider", ["ngResource"])
   function b(t, n) {
     var r = y(t, n, true, function () {
       angular.forEach(r, function (t) {
-        e.addContact(m, v + t.id, t.displayName || t.id, t.thumbnailUrl, t.location, null)
+        DirectoryService.addContact(_provider, _prefix + t.id, t.displayName || t.id, t.thumbnailUrl, t.location, null)
       })
     });
     return r
@@ -271,19 +284,20 @@ angular.module("vline.ui.OpensocialProvider", ["ngResource"])
     , l
     , c = "http://localhost:3000:3000/_vline/api/v1/"
     , h = 0
-    , p = "bloc"
     , d = false
-    , v = "bloc:"
+    , _domain = "bloc"
+    , _prefix = "bloc:"
     ;//-----
-  var m = {
+
+  var _provider = {
     getDomain:function () {
-      return p
+      return _domain
     },
     getUserPrefix:function () {
-      return v
+      return _prefix
     },
     login:function () {
-      return n.login(s)
+      return $vline.login(authId)
     },
     logout:function () {
       l = false
@@ -291,7 +305,7 @@ angular.module("vline.ui.OpensocialProvider", ["ngResource"])
     init:function (e, t, n) {
       f = e, a = t, n && (c = n);
       var r = e.indexOf(":");
-      r > 0 && (v = e.substr(0, r + 1), p = e.substr(0, r)), o = g("people/:userId/@self"), u = g("people/:userId/@all", true)
+      r > 0 && (_prefix = e.substr(0, r + 1), _domain = e.substr(0, r)), o = g("people/:userId/@self"), u = g("people/:userId/@all", true)
     },
     fetchContact:function (t, n) {
       var r = t.id,
@@ -300,12 +314,12 @@ angular.module("vline.ui.OpensocialProvider", ["ngResource"])
         u = y(o, {
           userId:s
         }, false, function () {
-          e.addContact(m, r, u.displayName || u.id, u.thumbnailUrl, u.location, n)
+          DirectoryService.addContact(_provider, r, u.displayName || u.id, u.thumbnailUrl, u.location, n)
         });
       return u.id = r, u
     },
     fetchAllContacts:function () {
-      t.following = b(u, {
+      $rootScope.following = b(u, {
         userId:1
       })
     },
@@ -318,7 +332,8 @@ angular.module("vline.ui.OpensocialProvider", ["ngResource"])
       return d
     }
   };
-  e.addProvider(m)
-}]);
 
+  DirectoryService.addProvider(_provider);
+
+}]);
 
