@@ -12,10 +12,6 @@
 
     $ node app
 
-    Connect http://127.0.0.1
-    teamdstn.dustin@gmail.com / invert0018
-    dustinko79@gmail.com / invert0018
-
 ## Features
 
 ## More Information
@@ -29,4 +25,4 @@ To run the test suite first invoke the following command within the repo, instal
 
 (The MIT License)
 
-Copyright (c) 2013 &lt;teamdstn.dustin@gmail.com;
+Copyright (c) 2013 &teamdstn.dustin@gmail.com
