@@ -25,4 +25,4 @@ To run the test suite first invoke the following command within the repo, instal
 
 (The MIT License)
 
-Copyright (c) 2013 &teamdstn.dustin@gmail.com
+Copyright (c) 2013 teamdstn.dustin@gmail.com
